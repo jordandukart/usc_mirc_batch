@@ -1,0 +1,6 @@
+name = MIRC@SC batch update
+description = Content model updating for MIRC.
+dependencies[] = islandora
+package = MIRC@SC
+version = 7.x-dev
+core = 7.x
