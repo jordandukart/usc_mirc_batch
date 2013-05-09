@@ -35,24 +35,39 @@ function usc_mirc_batch_drush_command() {
   return $items;
 }
 
+/**
+ * Kicks off the type of update based on old content model.
+ *
+ * @param string $fedora_cmodel
+ *   The old Fedora content model.
+ */
 function usc_mirc_batch_update_objects($fedora_cmodel) {
   $connection = islandora_get_tuque_connection();
   switch ($fedora_cmodel) {
-      case 'usc:test-vro':
-        usc_mirc_batch_update_vros($connection);
-        break;
-      case 'usc:test-mezzanine':
-        usc_mirc_batch_update_mezzanines($connection);
-        break;
-      case 'usc:test-access':
-        usc_mirc_batch_update_access($connection);
-        break;
-      default:
-        drush_set_error("Invalid CModel passed", "$fedora_cmodel is not a valid CModel to update", "Error: ");
-        break;
+    case 'usc:test-vro':
+      usc_mirc_batch_update_vros($connection);
+      break;
+
+    case 'usc:test-mezzanine':
+      usc_mirc_batch_update_mezzanines($connection);
+      break;
+
+    case 'usc:test-access':
+      usc_mirc_batch_update_access($connection);
+      break;
+
+    default:
+      drush_set_error("Invalid CModel passed", "$fedora_cmodel is not a valid CModel to update", "Error: ");
+      break;
   }
 }
 
+/**
+ * Batch updates the old preservation masters.
+ *
+ * @param Tuque $connection
+ *   A Tuque connection.
+ */
 function usc_mirc_batch_update_vros($connection) {
   $query = 'select $object from <#ri> where
   $object <fedora-model:hasModel> $model
@@ -63,6 +78,12 @@ function usc_mirc_batch_update_vros($connection) {
   }
 }
 
+/**
+ * Batch updates the old mezzanines.
+ *
+ * @param Tuque $connection
+ *   A Tuque connection.
+ */
 function usc_mirc_batch_update_mezzanines($connection) {
   $query = 'select $object from <#ri> where
   $object <fedora-model:hasModel> $model
@@ -73,6 +94,12 @@ function usc_mirc_batch_update_mezzanines($connection) {
   }
 }
 
+/**
+ * Batch updates the old access variants.
+ *
+ * @param Tuque $connection
+ *   A Tuque connection.
+ */
 function usc_mirc_batch_update_access($connection) {
   $query = 'select $object from <#ri> where
   $object <fedora-model:hasModel> $model
@@ -83,6 +110,14 @@ function usc_mirc_batch_update_access($connection) {
   }
 }
 
+/**
+ * Updates an old object's content model.
+ *
+ * @param string $pid
+ *   Pid of the object we are updating.
+ * @param string $cmodel
+ *   The new content model for the object.
+ */
 function usc_mirc_batch_update_object($pid, $cmodel) {
   $object = islandora_object_load($pid);
   unset($object->models);
@@ -93,6 +128,9 @@ function usc_mirc_batch_update_object($pid, $cmodel) {
   watchdog('MIRC@SC update', 'Updated the cmodel for @pid', array('@pid' => $pid), WATCHDOG_INFO);
 }
 
+/**
+ * Queries to find all access variants.
+ */
 function usc_mirc_generate_pb() {
   $connection = islandora_get_tuque_connection();
   $query = 'select $object from <#ri> where
@@ -104,6 +142,12 @@ function usc_mirc_generate_pb() {
   }
 }
 
+/**
+ * Generates, adds PBCore and updates the DC datastream of an object.
+ *
+ * @param string $pid
+ *   The pid of the object we are updating.
+ */
 function usc_mirc_generate_pbcore($pid) {
   module_load_include('inc', 'usc_mirc', 'includes/utilities');
   $object = islandora_object_load($pid);
