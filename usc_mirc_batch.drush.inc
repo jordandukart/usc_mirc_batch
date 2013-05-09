@@ -22,6 +22,16 @@ function usc_mirc_batch_drush_command() {
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
   );
+  $items['mirc_generate_pbcore'] = array(
+    'callback' => 'usc_mirc_generate_pb',
+    'description' => 'Generates missing PBCORE for Access Variants.',
+    'arguments' => array(),
+    'options' => array(),
+    'examples' => array(
+      'simple example' => 'drush -u 1 -l http://example.com mirc_generate_pbcore',
+    ),
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+  );
   return $items;
 }
 
@@ -81,4 +91,47 @@ function usc_mirc_batch_update_object($pid, $cmodel) {
     '1' => 'fedora-system:FedoraObject-3.0',
   );
   watchdog('MIRC@SC update', 'Updated the cmodel for @pid', array('@pid' => $pid), WATCHDOG_INFO);
+}
+
+function usc_mirc_generate_pb() {
+  $connection = islandora_get_tuque_connection();
+  $query = 'select $object from <#ri> where
+  $object <fedora-model:hasModel> $model
+  and $model <mulgara:is> <info:fedora/usc:accessCModel>';
+  $results = $connection->repository->ri->itqlQuery($query);
+  foreach ($results as $result) {
+    usc_mirc_generate_pbcore($result['object']['value']);
+  }
+}
+
+function usc_mirc_generate_pbcore($pid) {
+  module_load_include('inc', 'usc_mirc', 'includes/utilities');
+  $object = islandora_object_load($pid);
+
+  if (!$object['PBCORE']) {
+    $video_url = $object['VIDEO']->url;
+    $streaming_url = variable_get('usc_mirc_streaming_url', 'http://dvr-streaming.mirc.sc.edu');
+    if (strpos($video_url, $streaming_url) === 0) {
+      $local_path = format_string('!local_access/!file_part', array(
+        '!local_access' => variable_get('usc_mirc_streaming_folder', '/mnt/mirc/mezz/access'),
+        '!file_part' => drupal_substr($video_url, drupal_strlen($streaming_url) + 1),
+      ));
+    }
+    if (!empty($local_path)) {
+      $parent_pid = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isDerivativeOf');
+      dd($parent_pid, 'parent pid');
+      $parent_object = islandora_object_load($parent_pid[0]['object']['value']);
+      if (isset($parent_object['PBCORE'])) {
+        $params = usc_mirc_retrieve_pbcore_fields($parent_object);
+        usc_mirc_generate_video_metadata($local_path, $object, $params);
+        dd("Added PBCORE and updated DC metadata to $object->id");
+      }
+      else {
+        dd("The mezzanine ($parent_object->id) contains no PBCORE while attempting to add to $object->id");
+      }
+    }
+    else {
+      dd("Unable to determine the path to the local file system for $object->id");
+    }
+  }
 }
