@@ -101,13 +101,35 @@ function usc_mirc_batch_update_mezzanines($connection) {
  *   A Tuque connection.
  */
 function usc_mirc_batch_update_access($connection) {
+  // XXX: Most of the objects in prod have bad relationships for "hasModel"...
   $query = 'select $object from <#ri> where
-  $object <fedora-model:hasModel> $model
+  (
+    $object <fedora-model:hasModel> $model or
+    $object <fedora-rels-ext:hasModel> $model
+  )
   and $model <mulgara:is> <info:fedora/usc:test-access>';
   $results = $connection->repository->ri->itqlQuery($query);
   foreach ($results as $result) {
-    usc_mirc_batch_update_object($result['object']['value'], 'usc:accessCModel');
+    usc_mirc_batch_update_access_copy($result['object']['value']);
   }
+}
+
+/**
+ * Update access copy...
+ *
+ * Removes a bad relationship (if it exists).
+ *
+ * @param string $pid
+ *   The ID of the given access copy.
+ */
+function usc_mirc_batch_update_access_copy($pid) {
+  usc_mirc_batch_update_object($pid, 'usc:accessCModel');
+
+  $object = islandora_object_load($pid);
+
+  // XXX: Most of the access copies in prod have bad relationships...
+  // let's nuke 'em.
+  $bad_preds = $object->relationships->remove(FEDORA_RELS_EXT_URI, 'hasModel');
 }
 
 /**
