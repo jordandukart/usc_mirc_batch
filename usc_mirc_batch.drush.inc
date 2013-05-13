@@ -185,19 +185,18 @@ function usc_mirc_generate_pbcore($pid) {
     }
     if (!empty($local_path)) {
       $parent_pid = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isDerivativeOf');
-      dd($parent_pid, 'parent pid');
       $parent_object = islandora_object_load($parent_pid[0]['object']['value']);
       if (isset($parent_object['PBCORE'])) {
         $params = usc_mirc_retrieve_pbcore_fields($parent_object);
         usc_mirc_generate_video_metadata($local_path, $object, $params);
-        dd("Added PBCORE and updated DC metadata to $object->id");
+        drush_log('success', "Added PBCORE and updated DC metadata to $object->id");
       }
       else {
-        dd("The mezzanine ($parent_object->id) contains no PBCORE while attempting to add to $object->id");
+        drush_log('error', "The mezzanine ($parent_object->id) contains no PBCORE while attempting to add to $object->id");
       }
     }
     else {
-      dd("Unable to determine the path to the local file system for $object->id");
+      drush_log('error', "Unable to determine the path to the local file system for $object->id");
     }
   }
 }
