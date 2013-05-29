@@ -16,7 +16,6 @@ function usc_mirc_batch_drush_command() {
     'arguments' => array(
       'fedora_cmodel' => 'The name of the old content model.',
     ),
-    'options' => array(),
     'examples' => array(
       'simple example' => 'drush -u 1 -l http://example.com usc_mirc_update_objects namespace',
     ),
@@ -25,22 +24,20 @@ function usc_mirc_batch_drush_command() {
   $items['mirc_generate_pbcore'] = array(
     'callback' => 'usc_mirc_generate_pb',
     'description' => 'Generates missing PBCORE for Access Variants.',
-    'arguments' => array(),
-    'options' => array(),
     'examples' => array(
       'simple example' => 'drush -u 1 -l http://example.com mirc_generate_pbcore',
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+    'drupal dependencies' => array('usc_mirc'),
   );
   $items['mirc_add_handles'] = array(
     'callback' => 'usc_mirc_generate_handles',
     'description' => 'Creates and appends Handles for existing mezzanineCModel objects',
-    'arguments' => array(),
-    'options' => array(),
     'examples' => array(
       'simple example' => 'drush -u 1 -l http://example.com mirc_add_handles',
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+    'drupal dependencies' => array('islandora_handle'),
   );
   return $items;
 }
@@ -212,7 +209,7 @@ function usc_mirc_generate_pbcore($pid) {
 }
 
 /**
- * Queries to find all Mezzanines and determines which do not have Handle values.
+ * Queries to find all Mezzanines, determines which do not have Handle values.
  */
 function usc_mirc_generate_handles() {
   $connection = islandora_get_tuque_connection();

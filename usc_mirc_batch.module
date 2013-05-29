@@ -1,2 +1,6 @@
 <?php
 
+/**
+ * @file
+ * Stub module for the batching required for USC.
+ */
